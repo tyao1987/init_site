@@ -1,0 +1,211 @@
+<?php
+use Zend\Form\Element;
+use Test\Data;
+use Admin\Model\Auth;
+?>
+
+<div class="panel panel-default">
+
+
+      <div class="panel-body">
+        <form name="search" class="form-inline" role="form" action="/job/list" method="get">
+       
+          <div class="form-group">
+            <input value="<?php echo $this->param['name'];?>" type="text" name="name" class="form-control" id="name" placeholder="岗位">
+          </div>
+          <div class="form-group">
+            <div class="input-group">
+              <div class="input-group-addon">是否删除:</div>
+              <select class="form-control" name="is_delete" id="is_delete">
+                <option value=1 <?if( $this->param['is_delete'] == 1){echo "selected";}?>>是</option>
+                <option value=0 <?if( $this->param['is_delete'] == 0){echo "selected";}?>>否</option>
+              </select>
+            </div>
+          </div>
+<!--           <div class="form-group"> -->
+           <!--   <input value="<?php echo $this->param['real_name'];?>" type="text" name="real_name" class="form-control" id="name" placeholder="真实姓名">-->
+<!--           </div> -->
+          
+          <button type="submit" class="btn btn-primary">搜索</button>
+          
+          </form>
+          </div>
+  <div class="panel-body">
+	<table class="table table-striped">
+			<tr>
+				<th>岗位</th>
+				<th>公司名称</th>
+				<th>薪资</th>
+				<th>创建者</th>
+				<th>创建时间</th>
+				<th>状态</th>
+				<th>操作</th>
+				<?php 
+				    $verifyUrl = $this->url("default",array(
+				    "controller"=>"job",
+				    "action" => "verify"));
+				    $verify = false;
+				    if($this->CheckResource($verifyUrl)):
+				        $verify = true;
+				    endif;
+				    if($verify):
+				?>
+				<th>审核</th>
+				<?php 
+				    endif;
+				?>
+			</tr> 
+			 <?php foreach ($this->paginator as $job){ ?>
+			<tr>
+			    <td> <?php echo $this->escapehtml($job['name']); ?>  </td>
+			    <td> <?php echo $this->escapehtml($job['company']); ?>  </td>
+			    <td> <?php echo $this->escapehtml($job['salary']); ?>  </td>
+			    <td> <?php echo $this->escapehtml($this->GetUser($job['user_id'])['name']); ?> </td>
+			    <td> <?php echo $this->escapehtml(date("Y-m-d",strtotime($job['create_time']))); ?> </td>
+			    <td>
+			    	<?php 
+			    	    if($job['status'] == 0):
+			    	        echo "待审核";
+			    	    elseif($job['status'] == 1):
+			    	        echo "审核通过";
+			    	    elseif($job['status'] == 2):
+			    	        echo "审核未通过";
+			    	    endif;
+			    	?>
+			    	&nbsp;&nbsp;
+			    	<?php 
+			    	    if($job['is_top'] == 0):
+			    	        echo "未置顶";
+			    	    elseif($job['is_top'] == 1):
+			    	        echo "已置顶";
+			    	    endif;
+			    	?>
+			    </td> 
+			   
+			    <td>
+			    <?php 
+			     $data = Data::getInstance();
+			     $site = $data->get('site');
+			     $jobUrl = "http://".$site['hostname']."/job/".$job['id']."?show=1";
+			    ?>
+			    <a target="_blank" href="<?=$jobUrl;?>">查看</a>&nbsp;&nbsp;
+			    
+			    <?php 
+			         //$user = Auth::getIdentity();
+			         if($job['status'] == 0 || $job['status'] == 2):
+			    ?>
+			    <a href="<?php echo $this->url("default",array(
+			    		"controller"=>"job",
+			    		"action" => "manage",
+			             "id" => $job['id']
+			    )); ?>">编辑</a>&nbsp;&nbsp;
+			    <?php 
+			         endif;
+			    ?>
+			    
+			    	<?php 
+			    	    if($job['is_top'] == 0):
+			    	?>
+			    	<a href="<?php echo $this->url("default",array(
+			    		"controller"=>"job",
+			    		"action" => "top",
+			            "id" => $job['id']
+			         )); ?>">设为置顶</a>&nbsp;&nbsp;
+			    	<?php 
+			    	elseif($job['is_top'] == 1):
+			    	?>
+			    	<a href="<?php echo $this->url("default",array(
+			    		"controller"=>"job",
+			    		"action" => "cannel-top",
+			            "id" => $job['id']
+			         )); ?>">取消置顶</a>&nbsp;&nbsp;
+			    	 <?php 
+			    	    endif;
+			    	?>
+			    <?php 
+			    $deleteUrl = $this->url("default",array(
+			        "controller"=>"job",
+			        "action" => "delete"));
+			    if($this->CheckResource($deleteUrl)):
+    			    if($job['is_delete'] == 0):
+    			    ?>
+    			    <a class="checkDeleteUrl" href="<?php echo $this->url("default",array(
+    			    		"controller"=>"job",
+    			    		"action" => "delete",
+    			            "id" => $job['id']
+    			    )); ?>">删除</a>&nbsp;&nbsp;
+    			    <?php 
+    			     endif;
+    			    if($job['is_delete'] == 1):
+    			    ?>
+    			    <a href="<?php echo $this->url("default",array(
+    			    		"controller"=>"job",
+    			    		"action" => "reactive",
+    			            "id" => $job['id']
+    			    )); ?>">取消删除</a>&nbsp;&nbsp;
+    			    <?php 
+    			     endif;
+    			     if($job['status'] == 1):
+    			     ?>
+    			    <a class="downProduct" href="<?php echo $this->url("default",array(
+    			    		"controller"=>"job",
+    			    		"action" => "resetVerify",
+    			            "id" => $job['id']
+    			    )); ?>">下架</a>&nbsp;&nbsp;
+    			    <?php
+			         endif;
+			     
+			     endif;
+			    ?>
+			    </td>
+			    <?php 
+			    if($verify):
+			    ?>
+			    <td>
+			    <?php 
+			         if($job['status'] != 0):
+			             echo "已审核&nbsp;&nbsp;";
+			         else:
+			     ?>
+			    <a href="<?php echo $this->url("default",array(
+			    		"controller"=>"job",
+			    		"action" => "verify",
+			            "id" => $job['id']
+			    )); ?>">审核通过</a>&nbsp;&nbsp;
+			    
+			    <a href="<?php echo $this->url("default",array(
+			    		"controller"=>"job",
+			    		"action" => "notVerify",
+			            "id" => $job['id']
+			    )); ?>">审核未通过</a>&nbsp;&nbsp;
+			    <?php 
+			         endif;
+			    ?>
+			    </td>
+			    <?php 
+			     endif;
+			    ?>
+			</tr>
+			<?php } ?>
+	</table>
+	
+	<?php
+        
+	 	// add at the end of the file after the table
+	 	try {
+			echo $this->paginationControl(
+			    // the paginator object
+			    $this->paginator,
+			    'sliding',
+			    // the partial to use to render the control
+			    array('partial/paginator.phtml', 'Admin'),
+			    // the route to link to when a user clicks a control link
+			    array("route"=>'default','route_params'=>array('controller'=>'job','action'=>'list'))
+			);
+		}catch (\Exception $e){
+			echo $e->getMessage();
+		}
+	
+	?>
+</div>
+</div>
