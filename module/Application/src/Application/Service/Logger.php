@@ -20,7 +20,7 @@ class Logger {
             if (!self::$enabled) {
                 return null;
             }
-            $file = Util::getWritableDir('log') .date('Y-m-d')."-". $config['log']['file'];
+            $file = Util::getWritableDir('log') .date('Ymd')."-". $config['log']['file'];
             $backup = $file . date('YmdHi') . '_bak';
             if((file_exists($file) && !is_writable($file))
                 || (20480000 < filesize($file))){
